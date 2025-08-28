@@ -1,0 +1,21 @@
+{
+  "development": {
+    "type": "sqlite",
+    "database": "/home/ben/saralegui-solutions-mcp/database/saralegui_assistant.db",
+    "options": {
+      "fileMustExist": false
+    }
+  },
+  "production": {
+    "type": "sqlite",
+    "database": "/home/ben/saralegui-solutions-mcp/database/saralegui_assistant.db",
+    "options": {
+      "verbose": null,
+      "fileMustExist": true
+    }
+  },
+  "test": {
+    "type": "sqlite",
+    "database": ":memory:"
+  }
+}

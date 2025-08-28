@@ -1,0 +1,43 @@
+# Node modules
+node_modules/
+npm-debug.log*
+
+# Environment variables
+.env.local
+.env
+
+# Database files
+database/*.db
+database/*.db-wal
+database/*.db-shm
+
+# Temporary files
+temp/
+*.tmp
+*.log
+
+# Generated tools
+temp/generated-tools/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Backup files
+*.bak
+server_old.js
+
+# Audio files
+*.wav
+*.mp3
+*.m4a
+
+# Credentials backup
+*.cred

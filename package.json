@@ -1,0 +1,50 @@
+{
+  "name": "saralegui-mcp-server",
+  "version": "2.0.0",
+  "description": "MCP Server with learning capabilities for Saralegui Solutions",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "db:init": "node database/init_sqlite.js",
+    "db:reset": "rm -f database/*.db && npm run db:init",
+    "claudia": "node claudia/index.js",
+    "claudia:text": "node claudia/text_interface.js",
+    "chat": "node claudia/text_interface.js",
+    "test:mic": "node test/test_microphone.js",
+    "setup:netsuite": "node config/netsuite_sandbox.js",
+    "monitor": "node monitoring/dashboard.js",
+    "test": "node test/test_learning_engine.js",
+    "test:verbose": "node test/test_learning_engine.js --verbose",
+    "test:quick": "node test/test_learning_engine.js --quick",
+    "setup": "npm install && npm run db:init"
+  },
+  "keywords": [
+    "mcp",
+    "ai",
+    "learning",
+    "automation",
+    "claude",
+    "voice",
+    "whisper"
+  ],
+  "author": "Saralegui Solutions LLC",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^0.6.0",
+    "sqlite3": "^5.1.6",
+    "sqlite": "^5.1.1",
+    "openai": "^4.24.0",
+    "dotenv": "^16.3.1",
+    "chalk": "^5.3.0",
+    "ora": "^8.0.1",
+    "node-fetch": "^3.3.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.5"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
