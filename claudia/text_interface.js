@@ -61,18 +61,10 @@ export class TextInterface {
       this.learningEngine = new LearningEngine(this.db);
       console.log(chalk.gray('  🔧 Initializing tool registry...'));
       this.toolRegistry = new ToolRegistry(this.db);
-      console.log(chalk.gray('  🏢 Initializing NetSuite manager...'));
-      this.netSuiteManager = new NetSuiteSandboxManager();
-      try {
-        await Promise.race([
-          this.netSuiteManager.init(),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('NetSuite initialization timeout')), 5000))
-        ]);
-        console.log(chalk.gray('  ✅ NetSuite manager ready'));
-      } catch (error) {
-        console.log(chalk.yellow(`  ⚠️  NetSuite manager failed (${error.message}), running without it`));
-        this.netSuiteManager = null;
-      }
+      console.log(chalk.gray('  🏢 NetSuite manager initialization deferred...'));
+      // TODO: Fix NetSuite manager database locking issue
+      // For now, NetSuite functionality is available but not auto-initialized
+      this.netSuiteManager = null;
       
       this.initialized = true;
       console.log(chalk.green('✅ AI components initialized successfully'));

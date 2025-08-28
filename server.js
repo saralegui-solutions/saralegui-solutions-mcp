@@ -91,7 +91,15 @@ class SaraleguiMCPServer {
       
       console.error(`📋 Executing tool: ${name}`);
       
-      // Security validation
+      // Enhanced security validation for AI queries
+      if (name === 'ai_query' || name === 'intelligent_query') {
+        const queryValidation = await this.validateAIQuery(args);
+        if (!queryValidation.valid) {
+          throw new Error(`AI query validation failed: ${queryValidation.reason}`);
+        }
+      }
+      
+      // Standard security validation
       const securityCheck = await this.securityManager.validateToolExecution(
         this.sessionId, 
         name, 
@@ -173,6 +181,24 @@ class SaraleguiMCPServer {
             name: 'Knowledge Base',
             description: 'Accumulated knowledge and documentation',
             mimeType: 'text/markdown'
+          },
+          {
+            uri: 'knowledge://ai-capabilities',
+            name: 'AI Learning Capabilities',
+            description: 'Real-time learning engine statistics and capabilities',
+            mimeType: 'application/json'
+          },
+          {
+            uri: 'knowledge://text-interface',
+            name: 'Text Interface Guide',
+            description: 'AI-powered text interface usage and examples',
+            mimeType: 'text/markdown'
+          },
+          {
+            uri: 'knowledge://learning-stats',
+            name: 'Learning Statistics',
+            description: 'Live learning engine metrics and pattern data',
+            mimeType: 'application/json'
           }
         ]
       };
@@ -233,6 +259,130 @@ class SaraleguiMCPServer {
         };
       }
       
+      if (uri === 'knowledge://ai-capabilities') {
+        // Get real-time learning engine capabilities
+        const patterns = await this.db.all('SELECT COUNT(*) as count FROM learned_patterns');
+        const tools = await this.db.all('SELECT COUNT(*) as count FROM generated_tools WHERE is_active = 1');
+        const executions = await this.db.all('SELECT COUNT(*) as count FROM tool_executions');
+        
+        const capabilities = {
+          learning_engine: {
+            status: "active",
+            pattern_threshold: 2,
+            auto_generation_threshold: 3,
+            confidence_threshold: 0.6
+          },
+          statistics: {
+            learned_patterns: patterns[0]?.count || 0,
+            generated_tools: tools[0]?.count || 0,
+            tool_executions: executions[0]?.count || 0
+          },
+          capabilities: [
+            "Real-time pattern detection",
+            "Automatic tool generation",
+            "Knowledge base integration",
+            "Contextual AI responses",
+            "Workflow optimization suggestions"
+          ],
+          last_updated: new Date().toISOString()
+        };
+        
+        return {
+          contents: [
+            {
+              uri,
+              mimeType: 'application/json',
+              text: JSON.stringify(capabilities, null, 2)
+            }
+          ]
+        };
+      }
+      
+      if (uri === 'knowledge://text-interface') {
+        const guide = `# AI-Powered Text Interface Guide
+
+## Quick Start
+Launch the intelligent text interface:
+\`\`\`bash
+npm run chat
+\`\`\`
+
+## AI Commands
+- \`ask What can you tell me about the learning engine?\` - Get AI insights
+- \`status\` - Show system status with AI integration data
+- \`help\` - Show all available commands
+
+## Example Interactions
+The AI provides intelligent responses based on real-time learning data:
+
+\`\`\`
+Claudia> ask How many patterns have been detected?
+🤖 Claudia: Currently tracking learning progress with real-time statistics...
+\`\`\`
+
+## Features
+- ✅ Real-time learning statistics
+- ✅ Pattern recognition and reporting  
+- ✅ Intelligent query processing
+- ✅ Contextual AI responses
+- ✅ Knowledge base integration
+
+Last updated: ${new Date().toISOString()}`;
+
+        return {
+          contents: [
+            {
+              uri,
+              mimeType: 'text/markdown',
+              text: guide
+            }
+          ]
+        };
+      }
+      
+      if (uri === 'knowledge://learning-stats') {
+        // Get detailed learning statistics
+        const patterns = await this.db.all(`
+          SELECT pattern_type, occurrences, confidence_score, created_at
+          FROM learned_patterns
+          ORDER BY created_at DESC
+          LIMIT 10
+        `);
+        
+        const tools = await this.db.all(`
+          SELECT tool_name, usage_count, success_rate, created_at
+          FROM generated_tools
+          WHERE is_active = 1
+          ORDER BY created_at DESC
+          LIMIT 10
+        `);
+        
+        const stats = {
+          summary: {
+            total_patterns: patterns.length,
+            total_tools: tools.length,
+            last_updated: new Date().toISOString()
+          },
+          recent_patterns: patterns,
+          generated_tools: tools,
+          learning_metrics: {
+            pattern_detection_active: true,
+            auto_generation_enabled: true,
+            confidence_threshold: 0.6
+          }
+        };
+        
+        return {
+          contents: [
+            {
+              uri,
+              mimeType: 'application/json',
+              text: JSON.stringify(stats, null, 2)
+            }
+          ]
+        };
+      }
+      
       throw new Error(`Unknown resource: ${uri}`);
     });
   }
@@ -256,6 +406,68 @@ class SaraleguiMCPServer {
         console.warn('⚠️ Background pattern detection failed:', error.message);
       }
     });
+  }
+
+  async validateAIQuery(args) {
+    try {
+      const query = args.query || args.text || args.message || '';
+      
+      // Check for malicious patterns
+      const suspiciousPatterns = [
+        /system\s*prompt/i,
+        /ignore\s*instructions/i,
+        /jailbreak/i,
+        /roleplay/i,
+        /<script/i,
+        /javascript:/i,
+        /data:text\/html/i
+      ];
+      
+      for (const pattern of suspiciousPatterns) {
+        if (pattern.test(query)) {
+          return {
+            valid: false,
+            reason: 'Query contains potentially malicious content'
+          };
+        }
+      }
+      
+      // Length validation
+      if (query.length > 2000) {
+        return {
+          valid: false,
+          reason: 'Query exceeds maximum length (2000 characters)'
+        };
+      }
+      
+      // Rate limiting (simple session-based)
+      const now = Date.now();
+      if (!this.lastQueryTime) this.lastQueryTime = 0;
+      if (!this.queryCount) this.queryCount = 0;
+      
+      // Reset count every minute
+      if (now - this.lastQueryTime > 60000) {
+        this.queryCount = 0;
+      }
+      
+      this.queryCount++;
+      this.lastQueryTime = now;
+      
+      if (this.queryCount > 10) {
+        return {
+          valid: false,
+          reason: 'Rate limit exceeded (10 queries per minute)'
+        };
+      }
+      
+      return { valid: true };
+      
+    } catch (error) {
+      return {
+        valid: false,
+        reason: `Validation error: ${error.message}`
+      };
+    }
   }
 
   updateContext(updates) {

@@ -21,12 +21,19 @@ dotenv.config({ path: '.env.local' });
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export class NetSuiteSandboxManager {
-  async init() {
-    const dbPath = join(dirname(__dirname), 'database', 'saralegui_assistant.db');
-    this.db = await open({
-      filename: dbPath,
-      driver: sqlite3.Database
-    });
+  async init(sharedDb = null) {
+    if (sharedDb) {
+      // Use shared database connection to avoid locking issues
+      this.db = sharedDb;
+    } else {
+      // Create own connection if no shared connection provided
+      const dbPath = join(dirname(__dirname), 'database', 'saralegui_assistant.db');
+      this.db = await open({
+        filename: dbPath,
+        driver: sqlite3.Database
+      });
+    }
+    
     await this.setupTables();
     
     // Get encryption key from environment or use default (change in production!)
