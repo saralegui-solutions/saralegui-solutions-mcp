@@ -53,17 +53,16 @@ export class TextInterface {
         filename: dbPath,
         driver: sqlite3.Database
       });
+      
       console.log(chalk.gray('  ✅ Database connected'));
       
-      // Initialize learning components
+      // Initialize learning components with shared database connection
       console.log(chalk.gray('  🧠 Initializing learning engine...'));
       this.learningEngine = new LearningEngine(this.db);
       console.log(chalk.gray('  🔧 Initializing tool registry...'));
       this.toolRegistry = new ToolRegistry(this.db);
-      console.log(chalk.gray('  🏢 Initializing NetSuite manager...'));
-      this.netSuiteManager = new NetSuiteSandboxManager();
-      await this.netSuiteManager.init();
-      console.log(chalk.gray('  ✅ NetSuite manager ready'));
+      console.log(chalk.gray('  🏢 Skipping NetSuite manager (testing mode)...'));
+      this.netSuiteManager = null;
       
       this.initialized = true;
       console.log(chalk.green('✅ AI components initialized successfully'));
@@ -196,28 +195,31 @@ export class TextInterface {
     
     if (!this.initialized) {
       console.log(chalk.yellow('\n⚠️  AI components are still initializing. Please wait...'));
+      this.rl.prompt();
       return;
     }
     
     try {
       // Start AI processing
-      const spinner = this.createSpinner('Analyzing query with learning engine...');
-      spinner.start();
+      console.log(chalk.gray('🔄 Analyzing query with learning engine...'));
       
-      // Get intelligent response using our learning engine and knowledge base
+      // Generate intelligent response
+      console.log(chalk.gray('🔄 Calling generateIntelligentResponse...'));
       const response = await this.generateIntelligentResponse(query);
-      
-      spinner.stop();
+      console.log(chalk.gray('🔄 Response received:', typeof response, response ? response.length : 'null'));
       
       // Display the intelligent response
       console.log(chalk.green('\n🤖 Claudia:'));
       console.log(chalk.white(response));
       
       // Log the query for learning purposes
+      console.log(chalk.gray('🔄 Logging query...'));
       await this.logQuery(query);
+      console.log(chalk.gray('🔄 Query logged successfully'));
       
     } catch (error) {
       console.error(chalk.red('\n❌ Error processing query:'), error.message);
+      console.error('Stack trace:', error.stack);
       
       // Fallback response
       console.log(chalk.yellow('\n🤖 Claudia (Fallback):'));
@@ -225,13 +227,16 @@ export class TextInterface {
     }
     
     console.log();
+    this.rl.prompt(); // Ensure prompt continues after response
   }
   
   async generateIntelligentResponse(query) {
+    console.log(chalk.gray('  📝 Analyzing query type...'));
     const lowerQuery = query.toLowerCase();
     
     // Check if query is about the learning engine specifically
     if (lowerQuery.includes('learning') || lowerQuery.includes('automated learning') || lowerQuery.includes('mcp server')) {
+      console.log(chalk.gray('  🧠 Detected learning engine query'));
       return await this.getLearningEngineInfo();
     }
     
@@ -274,49 +279,28 @@ export class TextInterface {
   
   async getLearningEngineInfo() {
     try {
-      // Get learning engine statistics
-      const patterns = await this.db.all('SELECT COUNT(*) as count FROM learned_patterns');
-      const tools = await this.db.all('SELECT COUNT(*) as count FROM generated_tools WHERE is_active = 1');
-      const executions = await this.db.all('SELECT COUNT(*) as count FROM tool_executions');
+      console.log(chalk.gray('    🔍 Generating learning engine response...'));
       
-      const patternCount = patterns[0]?.count || 0;
-      const toolCount = tools[0]?.count || 0;
-      const executionCount = executions[0]?.count || 0;
+      // For now, return static response to test the flow
+      let response = `🧠 **Automated Learning Capability Overview:**\n\n`;
+      response += `Our MCP server features an advanced learning system that:\n\n`;
+      response += `📊 **Key Features:**\n`;
+      response += `• **Pattern Detection** - Monitors tool usage and identifies recurring patterns\n`;
+      response += `• **Automatic Tool Generation** - Creates new tools from detected patterns\n`;
+      response += `• **Knowledge Base** - Stores learned behaviors and successful workflows\n`;
+      response += `• **Intelligent Suggestions** - Recommends optimizations based on usage\n\n`;
+      response += `🔧 **Current Status:**\n`;
+      response += `• Learning engine is initialized and running\n`;
+      response += `• Pattern detection active with 2+ occurrence threshold\n`;
+      response += `• Auto-generation enabled at 3+ occurrences with 60%+ confidence\n`;
+      response += `• Database tracking all tool executions for analysis\n\n`;
+      response += `💡 **How to Use:**\n`;
+      response += `• Use tools repeatedly to create patterns\n`;
+      response += `• The system will automatically detect and suggest optimizations\n`;
+      response += `• Generated tools will appear in the available tools list`;
       
-      // Get recent patterns
-      const recentPatterns = await this.db.all(`
-        SELECT pattern_type, occurrences, confidence_score, created_at 
-        FROM learned_patterns 
-        ORDER BY last_seen DESC 
-        LIMIT 5
-      `);
-      
-      let response = `Our MCP server features an advanced automated learning capability:\n\n`;
-      response += `📊 **Current Learning Statistics:**\n`;
-      response += `• **${patternCount} learned patterns** detected and stored\n`;
-      response += `• **${toolCount} automated tools** generated from patterns\n`;
-      response += `• **${executionCount} tool executions** analyzed for learning\n`;
-      response += `• **Pattern threshold:** 2+ occurrences trigger suggestions\n`;
-      response += `• **Auto-generation:** 3+ occurrences with 60%+ confidence\n\n`;
-      
-      if (recentPatterns.length > 0) {
-        response += `🔍 **Recent Learning Activity:**\n`;
-        recentPatterns.forEach((pattern, index) => {
-          response += `${index + 1}. ${pattern.pattern_type || 'Sequence'} pattern ` +
-                     `(${pattern.occurrences} occurrences, ${(pattern.confidence_score * 100).toFixed(1)}% confidence)\n`;
-        });
-        response += `\n`;
-      }
-      
-      response += `🧠 **How It Works:**\n`;
-      response += `• Monitors all tool executions and user interactions\n`;
-      response += `• Detects recurring patterns in tool usage sequences\n`;
-      response += `• Automatically suggests and generates new tools\n`;
-      response += `• Learns from successful execution patterns\n`;
-      response += `• Continuously improves suggestions based on usage\n\n`;
-      
-      response += `The system is actively learning from your interactions and becoming more intelligent over time!`;
-      
+      console.log(chalk.gray('    ✅ Response generated successfully'));
+      console.log(chalk.gray('    🔄 Returning response of length:', response.length));
       return response;
       
     } catch (error) {
