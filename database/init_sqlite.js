@@ -98,13 +98,19 @@ export async function initializeDatabase() {
         updated_at TEXT DEFAULT CURRENT_TIMESTAMP
       );
 
-      -- NetSuite credentials (encrypted)
+      -- NetSuite credentials (encrypted) - Multi-client support
       CREATE TABLE IF NOT EXISTS netsuite_credentials (
-        account_id TEXT PRIMARY KEY,
+        id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+        client_name TEXT NOT NULL,
+        project_path TEXT NOT NULL,
+        account_id TEXT NOT NULL,
         environment TEXT NOT NULL,
+        account_alias TEXT,
         encrypted_credentials TEXT NOT NULL,
+        is_default INTEGER DEFAULT 0,
         last_used TEXT,
-        created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(client_name, account_id, environment)
       );
 
       -- Voice command history
@@ -137,6 +143,8 @@ export async function initializeDatabase() {
       CREATE INDEX IF NOT EXISTS idx_patterns_occurrences ON learned_patterns(occurrences);
       CREATE INDEX IF NOT EXISTS idx_knowledge_type ON knowledge_entries(entry_type);
       CREATE INDEX IF NOT EXISTS idx_voice_commands_created ON voice_commands(created_at);
+      CREATE INDEX IF NOT EXISTS idx_netsuite_client ON netsuite_credentials(client_name);
+      CREATE INDEX IF NOT EXISTS idx_netsuite_default ON netsuite_credentials(client_name, is_default);
     `);
     
     console.log(chalk.green('✅ Tables and indexes created'));

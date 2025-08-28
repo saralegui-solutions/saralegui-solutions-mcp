@@ -18,6 +18,12 @@
     "test": "node test/test_learning_engine.js",
     "test:verbose": "node test/test_learning_engine.js --verbose",
     "test:quick": "node test/test_learning_engine.js --quick",
+    "test:text": "node test/test_text_interface.js",
+    "test:env": "node test/test_environment.js",
+    "test:wsl": "node test/test_wsl_compatibility.js",
+    "test:e2e": "node test/test_e2e.js",
+    "test:new": "node test/test_all_new.js",
+    "test:all": "npm test && npm run test:new",
     "setup": "npm install && npm run db:init"
   },
   "keywords": [

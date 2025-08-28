@@ -43,6 +43,24 @@ export class MockDatabase {
     return results[0] || null;
   }
 
+  // Simulate multiple row fetch (alias for query)
+  async all(sql, params = []) {
+    return await this.query(sql, params);
+  }
+
+  // Simulate run method (for INSERT/UPDATE/DELETE)
+  async run(sql, params = []) {
+    const results = await this.query(sql, params);
+    
+    // For INSERT statements, return the result with lastID
+    if (sql.toLowerCase().trim().startsWith('insert into')) {
+      return results;
+    }
+    
+    // For UPDATE/DELETE, return changes count
+    return { changes: results.affectedRows || 0 };
+  }
+
   handleInsert(sql, params) {
     const tableMatch = sql.match(/insert into (\w+)/i);
     if (!tableMatch) throw new Error('Invalid INSERT query');
