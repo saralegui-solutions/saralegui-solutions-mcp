@@ -185,6 +185,19 @@ Supports:
 - AES-256-GCM encryption
 - Credential backup and export
 
+## Repository Management Policies
+
+**🔒 Privacy Policy: All repositories created through this MCP server are PRIVATE by default.**
+
+Configuration: `config/repository-policies.yaml`
+
+Key policies:
+- **Default visibility**: Private (enforced)
+- **Public repositories**: Blocked without explicit override
+- **Security scanning**: Enabled on all repos
+- **Branch protection**: Required on main branch
+- **Documentation**: PROPRIETARY_NOTICE.md required
+
 ## System Architecture
 
 ```

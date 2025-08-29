@@ -1,0 +1,74 @@
+# Repository Management Policies for Saralegui MCP Server
+# Enforced across all repository creation and management operations
+
+repository_defaults:
+  visibility: private
+  description_required: true
+  readme_required: true
+  gitignore_required: true
+  
+privacy_policies:
+  # CRITICAL: All new repositories MUST be private by default
+  default_visibility: private
+  allow_public: false  # Requires explicit override with approval
+  force_private: true  # Override any public visibility requests
+  
+  # Exceptions requiring explicit approval (if any needed in future)
+  public_exceptions: []
+  
+creation_rules:
+  # Repository creation standards
+  naming_convention: "kebab-case"  # lowercase-with-hyphens
+  require_description: true
+  require_initial_commit: true
+  require_branch_protection: true
+  
+  # Default files to include
+  default_files:
+    - "README.md"
+    - ".gitignore" 
+    - "PROPRIETARY_NOTICE.md"
+    - ".env.example"
+  
+  # Branch protection rules
+  branch_protection:
+    default_branch: "main"
+    require_pr_reviews: true
+    require_status_checks: true
+    restrict_pushes: true
+    
+security_policies:
+  # Security scanning requirements
+  enable_secret_scanning: true
+  enable_dependency_alerts: true
+  enable_code_scanning: false  # Optional for private repos
+  
+  # Access control
+  default_team_access: "maintain"  # For saralegui-solutions team
+  require_2fa: true
+  
+compliance:
+  # Audit logging
+  log_all_operations: true
+  retention_period: "2 years"
+  
+  # Documentation requirements
+  require_license_notice: true  # PROPRIETARY_NOTICE.md for our repos
+  require_contributing_guide: true
+  require_security_policy: true
+  
+enforcement:
+  # How policies are enforced
+  pre_creation_validation: true
+  post_creation_verification: true
+  periodic_compliance_check: true
+  
+  # Violation handling
+  auto_remediate: true  # Automatically fix policy violations when possible
+  notification_required: true  # Notify on policy violations
+  
+# Usage Notes:
+# - This policy ensures ALL new repositories are private by default
+# - Any public repository requests are blocked unless explicitly overridden
+# - Compliance checks verify all repositories meet security standards
+# - MCP server operations will reference these policies for repo management
