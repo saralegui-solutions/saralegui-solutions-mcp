@@ -14,8 +14,8 @@ async function testEnhancedLearning() {
   console.log(chalk.blue.bold('🧪 Quick Enhanced Learning Test'));
   console.log(chalk.blue('================================'));
   
-  // Initialize components
-  const db = new DatabaseManager();
+  // Initialize components with correct database path
+  const db = new DatabaseManager({ dbPath: 'database/saralegui_assistant.db' });
   const learningEngine = new LearningEngine(db);
   const toolRegistry = new ToolRegistry(db);
   

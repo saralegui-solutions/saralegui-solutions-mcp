@@ -15,7 +15,7 @@ import readline from 'readline';
 
 class EnhancedLearningDemo {
   constructor() {
-    this.db = new DatabaseManager();
+    this.db = new DatabaseManager({ dbPath: 'database/saralegui_assistant.db' });
     this.learningEngine = new LearningEngine(this.db);
     this.toolRegistry = new ToolRegistry(this.db);
     

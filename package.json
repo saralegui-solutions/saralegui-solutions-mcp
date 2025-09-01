@@ -25,6 +25,8 @@
     "test:new": "node test/test_all_new.js",
     "test:enhanced": "node test/test_enhanced_learning.js",
     "test:enhanced:quick": "node scripts/test_enhanced_learning.js",
+    "test:query:learning": "node scripts/test_query_learning.js",
+    "test:workflow:optimization": "node scripts/test_workflow_optimization.js",
     "demo:learning": "node demo/enhanced_learning_demo.js",
     "test:all": "npm test && npm run test:new",
     "setup": "npm install && npm run db:init"
