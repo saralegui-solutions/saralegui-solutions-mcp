@@ -1,0 +1,246 @@
+{
+  "name": "NetSuite MCP Setup Guide",
+  "version": "1.0.0",
+  "description": "Complete setup and installation guide for NetSuite MCP integration",
+  "last_updated": "2025-01-29",
+  "installation": {
+    "title": "Installation Steps",
+    "steps": [
+      {
+        "step": 1,
+        "title": "Verify Prerequisites",
+        "description": "Ensure all required components are installed",
+        "commands": [
+          "node --version  # Should be 18+",
+          "ls -la /home/ben/saralegui-solutions-mcp",
+          "ls -la /home/ben/.claude/bin"
+        ],
+        "verification": "All directories exist and Node.js version is 18 or higher"
+      },
+      {
+        "step": 2,
+        "title": "Configure PATH",
+        "description": "Add Claude bin directory to system PATH",
+        "commands": [
+          "echo 'export PATH=\"/home/ben/.claude/bin:$PATH\"' >> ~/.bashrc",
+          "source ~/.bashrc",
+          "echo $PATH | grep -o '/home/ben/.claude/bin'"
+        ],
+        "verification": "PATH includes /home/ben/.claude/bin"
+      },
+      {
+        "step": 3,
+        "title": "Source Shell Aliases",
+        "description": "Load NetSuite MCP aliases for quick access",
+        "commands": [
+          "source ~/.claude/aliases/netsuite-mcp-aliases.sh",
+          "ns-health"
+        ],
+        "verification": "Aliases work and ns-health responds"
+      },
+      {
+        "step": 4,
+        "title": "Start MCP Server",
+        "description": "Initialize the NetSuite MCP server",
+        "commands": [
+          "mcp-ns server start",
+          "mcp-ns health"
+        ],
+        "verification": "Server starts successfully and health check passes"
+      }
+    ]
+  },
+  "configuration": {
+    "title": "NetSuite Configuration",
+    "oauth_setup": {
+      "title": "NetSuite OAuth Setup",
+      "description": "Configure OAuth credentials in NetSuite",
+      "steps": [
+        {
+          "step": 1,
+          "title": "Create Integration Application",
+          "description": "In NetSuite: Setup > Integration > Manage Integrations",
+          "actions": [
+            "Click 'New'",
+            "Name your integration (e.g., 'Claude Assistant MCP')",
+            "Enable 'Token-Based Authentication'",
+            "Save and note Consumer Key/Secret"
+          ]
+        },
+        {
+          "step": 2,
+          "title": "Create Access Token",
+          "description": "In NetSuite: Setup > Users/Roles > Access Tokens",
+          "actions": [
+            "Click 'New'",
+            "Select your Integration Application",
+            "Select User and Role",
+            "Save and note Token ID/Secret"
+          ]
+        }
+      ]
+    },
+    "mcp_setup": {
+      "title": "MCP Credential Setup",
+      "description": "Configure credentials using MCP tools",
+      "method": "Use netsuite_setup MCP tool in Claude Desktop",
+      "parameters": {
+        "account_id": "Your NetSuite account ID (e.g., TSTDRV123456)",
+        "consumer_key": "OAuth Consumer Key from Integration",
+        "consumer_secret": "OAuth Consumer Secret from Integration",
+        "token_id": "Access Token ID",
+        "token_secret": "Access Token Secret",
+        "environment": "sandbox or production"
+      },
+      "example": "Call netsuite_setup tool with your actual credentials"
+    }
+  },
+  "validation": {
+    "title": "Setup Validation",
+    "checks": [
+      {
+        "check": "Command Accessibility",
+        "command": "mcp-ns version",
+        "expected": "Shows version information"
+      },
+      {
+        "check": "Server Status",
+        "command": "mcp-ns server status",
+        "expected": "Server is running"
+      },
+      {
+        "check": "Health Check", 
+        "command": "mcp-ns health",
+        "expected": "All systems operational"
+      },
+      {
+        "check": "MCP Tools Available",
+        "method": "Check Claude Desktop MCP tools",
+        "expected": "netsuite_setup, netsuite_list, etc. available"
+      },
+      {
+        "check": "Client Configuration",
+        "method": "Use netsuite_list MCP tool",
+        "expected": "Shows configured NetSuite accounts"
+      },
+      {
+        "check": "Connection Test",
+        "method": "Use netsuite_test MCP tool", 
+        "expected": "Successful connection to NetSuite"
+      }
+    ]
+  },
+  "directory_structure": {
+    "title": "Directory Structure",
+    "description": "Important files and directories in the NetSuite MCP setup",
+    "structure": {
+      "/home/ben/saralegui-solutions-mcp/": {
+        "description": "Main MCP server directory",
+        "key_files": [
+          "mcp-netsuite-server.js - Main MCP server",
+          "start-netsuite-mcp.sh - Server startup script",
+          "database/ - Client credentials and session data",
+          "logs/ - Server logs",
+          "resources/ - Documentation resources"
+        ]
+      },
+      "/home/ben/.claude/bin/": {
+        "description": "Command line interfaces",
+        "key_files": [
+          "mcp-ns - NetSuite MCP CLI",
+          "ca - Claude Assistant unified CLI",
+          "netsuite-docs - Documentation viewer",
+          "npm-ca - NPM script runner"
+        ]
+      },
+      "/home/ben/.claude/aliases/": {
+        "description": "Shell aliases",
+        "key_files": [
+          "netsuite-mcp-aliases.sh - Quick access aliases"
+        ]
+      },
+      "/home/ben/saralegui-solutions-llc/claude-assistant/": {
+        "description": "Claude Assistant integration",
+        "key_files": [
+          "claudio - Main orchestrator with MCP integration",
+          "NETSUITE_MCP_COMMANDS.md - Command documentation",
+          "MCP_COMMANDS_RESOURCE.md - MCP reference guide"
+        ]
+      }
+    }
+  },
+  "integration_testing": {
+    "title": "Integration Testing",
+    "test_scenarios": [
+      {
+        "scenario": "Command Line Access",
+        "description": "Test all command line interfaces work",
+        "tests": [
+          "mcp-ns health",
+          "ca mcp-ns health", 
+          "./claudio mcp-ns health",
+          "ns-health (alias)"
+        ]
+      },
+      {
+        "scenario": "MCP Tool Access",
+        "description": "Test MCP tools through Claude Desktop",
+        "tests": [
+          "Use netsuite_list tool",
+          "Use netsuite_test tool",
+          "Use netsuite_query tool with simple SELECT"
+        ]
+      },
+      {
+        "scenario": "Documentation Access",
+        "description": "Test documentation is accessible",
+        "tests": [
+          "mcp-ns docs",
+          "npm run docs:netsuite",
+          "View MCP resources in Claude Desktop"
+        ]
+      }
+    ]
+  },
+  "automated_setup": {
+    "title": "Automated Setup Script",
+    "description": "Use the automated setup script for validation",
+    "script": "/home/ben/saralegui-solutions-llc/claude-assistant/setup-mcp-commands.sh",
+    "usage": [
+      "cd /home/ben/saralegui-solutions-llc/claude-assistant",
+      "./setup-mcp-commands.sh"
+    ],
+    "features": [
+      "Checks all prerequisites",
+      "Validates PATH configuration",
+      "Tests command accessibility",
+      "Verifies MCP server status",
+      "Sources shell aliases",
+      "Provides setup recommendations"
+    ]
+  },
+  "client_patterns": {
+    "title": "Client Configuration Patterns",
+    "description": "How NetSuite MCP detects and manages different clients",
+    "detection_rules": {
+      "directory_based": "Clients detected from directory structure under /home/ben/saralegui-solutions-llc/",
+      "naming_convention": "Client name extracted from directory path",
+      "auto_discovery": "client_discover MCP tool can scan for new clients"
+    },
+    "supported_clients": [
+      "rockwest",
+      "vanzandt", 
+      "interstate",
+      "escalon"
+    ],
+    "client_aliases": {
+      "description": "Quick test shortcuts for each client",
+      "aliases": [
+        "ns-rockwest - Test RockWest client",
+        "ns-vanzandt - Test VanZandt client",
+        "ns-interstate - Test Interstate client", 
+        "ns-escalon - Test Escalon client"
+      ]
+    }
+  }
+}

@@ -251,15 +251,28 @@ export class NetSuiteSandboxManager {
         return null;
       }
       
-      // Store credentials
+      // Ask about default setting BEFORE starting any processing
+      console.log(chalk.cyan.bold('\n🎯 Default Account Configuration'));
+      console.log(chalk.gray('───────────────────────────────────────'));
+      console.log(chalk.white(`Make this the default NetSuite account for ${chalk.yellow.bold(clientInfo.client)}?`));
+      console.log('');
+      console.log(chalk.gray('This means:'));
+      console.log(chalk.gray(`• When ${clientInfo.client} MCP tools need NetSuite access, they'll use these credentials automatically`));
+      console.log(chalk.gray(`• You can still add other NetSuite accounts for ${clientInfo.client} later (production, different subsidiaries, etc.)`));
+      console.log(chalk.gray('• Other clients (escalon, interstate-parking, etc.) are unaffected and have their own defaults'));
+      console.log('');
+      console.log(chalk.gray(`Example: If you later add production credentials for ${clientInfo.client}, you can choose which one is default.`));
+      console.log('');
+      
+      const makeDefault = await question(chalk.yellow(`Make this ${clientInfo.client}'s default account? (y/n) [y]: `)) || 'y';
+      const isDefault = makeDefault.toLowerCase().startsWith('y') ? 1 : 0;
+      
+      rl.close();
+      
+      // NOW start the processing spinner
       const spinner = ora('Encrypting and storing credentials...').start();
       
       try {
-        // Check if user wants this as default
-        const makeDefault = await question(`Set as default account for ${clientInfo.client}? (y/n) [y]: `) || 'y';
-        const isDefault = makeDefault.toLowerCase().startsWith('y') ? 1 : 0;
-        
-        rl.close();
         
         const encrypted = this.encrypt(JSON.stringify(credentials));
         

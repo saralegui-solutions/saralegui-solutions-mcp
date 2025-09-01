@@ -1,0 +1,268 @@
+{
+  "name": "NetSuite MCP Commands Reference",
+  "version": "1.0.0",
+  "description": "Comprehensive reference for all NetSuite MCP commands and tools",
+  "last_updated": "2025-01-29",
+  "categories": {
+    "mcp_tools": {
+      "title": "MCP Tools (Available through Claude Desktop)",
+      "description": "Direct NetSuite operations accessible via Model Context Protocol",
+      "commands": {
+        "netsuite_setup": {
+          "description": "Configure NetSuite credentials for a client project",
+          "syntax": "netsuite_setup",
+          "parameters": {
+            "client_name": "Name of the client (auto-detected from path if not provided)",
+            "account_id": "NetSuite account ID (e.g., TSTDRV123456)",
+            "consumer_key": "OAuth consumer key",
+            "consumer_secret": "OAuth consumer secret", 
+            "token_id": "Access token ID",
+            "token_secret": "Access token secret",
+            "environment": "NetSuite environment (sandbox/production)"
+          },
+          "required": ["account_id", "consumer_key", "consumer_secret", "token_id", "token_secret"],
+          "examples": [
+            {
+              "description": "Setup NetSuite credentials for RockWest client",
+              "usage": "Use the netsuite_setup tool with your NetSuite credentials"
+            }
+          ]
+        },
+        "netsuite_list": {
+          "description": "List all configured NetSuite accounts",
+          "syntax": "netsuite_list",
+          "parameters": {
+            "client_filter": "Filter by client name (optional)",
+            "include_test_status": "Include connection test results (default: false)"
+          },
+          "examples": [
+            {
+              "description": "List all configured accounts",
+              "usage": "Use netsuite_list tool with no parameters"
+            },
+            {
+              "description": "List accounts for specific client",
+              "usage": "Use netsuite_list tool with client_filter parameter"
+            }
+          ]
+        },
+        "netsuite_test": {
+          "description": "Test NetSuite connection for a client",
+          "syntax": "netsuite_test",
+          "parameters": {
+            "client_name": "Client name (auto-detected if not provided)",
+            "account_id": "Specific account ID to test (optional)"
+          },
+          "examples": [
+            {
+              "description": "Test connection for current client",
+              "usage": "Use netsuite_test tool from client project directory"
+            }
+          ]
+        },
+        "netsuite_query": {
+          "description": "Execute SuiteQL query against NetSuite",
+          "syntax": "netsuite_query",
+          "parameters": {
+            "client_name": "Client name (auto-detected if not provided)",
+            "query": "SuiteQL query to execute",
+            "limit": "Maximum number of results to return (default: 100)",
+            "offset": "Number of results to skip (default: 0)"
+          },
+          "required": ["query"],
+          "examples": [
+            {
+              "description": "List customers",
+              "usage": "Execute query: SELECT * FROM customer LIMIT 10"
+            },
+            {
+              "description": "Search items by name",
+              "usage": "Execute query: SELECT itemid, displayname FROM item WHERE displayname LIKE '%search_term%'"
+            }
+          ],
+          "security_notes": [
+            "Only SELECT queries are recommended",
+            "Destructive operations (DELETE, DROP, TRUNCATE) are blocked",
+            "Rate limiting: 10 calls per minute per session"
+          ]
+        },
+        "netsuite_deploy": {
+          "description": "Deploy SuiteScript files to NetSuite",
+          "syntax": "netsuite_deploy",
+          "parameters": {
+            "client_name": "Client name (auto-detected if not provided)",
+            "script_type": "Type of SuiteScript (userevent, scheduled, restlet, suitelet, client, mapreduce)",
+            "script_content": "JavaScript content of the script",
+            "script_name": "Name for the script",
+            "deployment_config": "Deployment configuration options"
+          },
+          "required": ["script_type", "script_content", "script_name"],
+          "examples": [
+            {
+              "description": "Deploy a user event script",
+              "usage": "Use netsuite_deploy with script_type='userevent' and your script content"
+            }
+          ]
+        },
+        "client_discover": {
+          "description": "Discover new client projects and integrate them",
+          "syntax": "client_discover",
+          "parameters": {
+            "base_path": "Base path to scan for clients (default: /home/ben/saralegui-solutions-llc)",
+            "dry_run": "Show what would be done without making changes (default: false)"
+          },
+          "examples": [
+            {
+              "description": "Scan for new client projects",
+              "usage": "Use client_discover tool to automatically find and integrate new NetSuite clients"
+            }
+          ]
+        }
+      }
+    },
+    "command_line_tools": {
+      "title": "Command Line Interface (mcp-ns)",
+      "description": "Shell commands for managing NetSuite MCP from terminal",
+      "commands": {
+        "server_management": {
+          "mcp-ns health": "Run MCP server health check",
+          "mcp-ns status": "Check MCP server status",
+          "mcp-ns server start": "Start MCP server",
+          "mcp-ns server stop": "Stop MCP server",
+          "mcp-ns server restart": "Restart MCP server",
+          "mcp-ns server logs": "View MCP server logs"
+        },
+        "testing_validation": {
+          "mcp-ns test": "Run comprehensive MCP test suite",
+          "mcp-ns results": "View latest test results",
+          "mcp-ns validate": "Validate complete MCP setup"
+        },
+        "documentation": {
+          "mcp-ns docs": "View all MCP documentation",
+          "mcp-ns guide": "View testing guide", 
+          "mcp-ns spec": "View technical specifications"
+        },
+        "client_operations": {
+          "mcp-ns clients": "List all ESONUS clients",
+          "mcp-ns client <name>": "Test specific client integration"
+        },
+        "tools_info": {
+          "mcp-ns tools": "List available MCP tools",
+          "mcp-ns config": "Show MCP configuration",
+          "mcp-ns version": "Show version information"
+        }
+      }
+    },
+    "integration_methods": {
+      "title": "Access Methods",
+      "description": "Different ways to access NetSuite MCP functionality",
+      "methods": {
+        "direct_mcp": {
+          "title": "Direct MCP Command",
+          "syntax": "mcp-ns [command]",
+          "description": "Direct command line access",
+          "examples": ["mcp-ns health", "mcp-ns server start"]
+        },
+        "claude_assistant_cli": {
+          "title": "Claude Assistant CLI",
+          "syntax": "ca mcp-ns [command]",
+          "description": "Access through Claude Assistant unified interface",
+          "examples": ["ca mcp-ns health", "ca status"]
+        },
+        "claudio_integration": {
+          "title": "Claudio Integration",
+          "syntax": "./claudio mcp-ns [command]",
+          "description": "Access through Claudio orchestrator",
+          "examples": ["./claudio mcp-ns health", "./claudio help mcp-ns"]
+        },
+        "shell_aliases": {
+          "title": "Shell Aliases",
+          "syntax": "ns-[command]",
+          "description": "Quick access shortcuts",
+          "examples": ["ns-health", "ns-status", "ns-docs", "ns-rockwest"]
+        },
+        "npm_scripts": {
+          "title": "NPM Scripts",
+          "syntax": "npm run [script] / npm-ca [script]",
+          "description": "Documentation and testing through npm",
+          "examples": ["npm run docs:netsuite", "npm-ca test:netsuite:view"]
+        }
+      }
+    }
+  },
+  "quick_start": {
+    "title": "Quick Start Guide",
+    "steps": [
+      {
+        "step": 1,
+        "action": "Start MCP Server",
+        "command": "mcp-ns server start",
+        "description": "Initialize the NetSuite MCP server"
+      },
+      {
+        "step": 2,
+        "action": "Check Health",
+        "command": "mcp-ns health",
+        "description": "Verify server is running and healthy"
+      },
+      {
+        "step": 3,
+        "action": "Configure Client",
+        "command": "Use netsuite_setup MCP tool",
+        "description": "Set up NetSuite credentials for your client"
+      },
+      {
+        "step": 4,
+        "action": "Test Connection",
+        "command": "Use netsuite_test MCP tool",
+        "description": "Verify NetSuite connection works"
+      },
+      {
+        "step": 5,
+        "action": "Execute Query",
+        "command": "Use netsuite_query MCP tool",
+        "description": "Run your first SuiteQL query"
+      }
+    ]
+  },
+  "prerequisites": {
+    "title": "Prerequisites",
+    "requirements": [
+      "NetSuite MCP server running: mcp-ns server start",
+      "/home/ben/.claude/bin in your PATH",
+      "Shell aliases sourced: source ~/.claude/aliases/netsuite-mcp-aliases.sh",
+      "Claude Desktop with MCP configuration",
+      "Node.js 18+ installed",
+      "NetSuite account with OAuth credentials"
+    ]
+  },
+  "troubleshooting": {
+    "title": "Common Issues",
+    "issues": {
+      "command_not_found": {
+        "problem": "mcp-ns command not found",
+        "solutions": [
+          "Check if /home/ben/.claude/bin is in PATH: echo $PATH",
+          "Add to PATH: export PATH=\"/home/ben/.claude/bin:$PATH\"",
+          "Verify script exists: ls -la /home/ben/.claude/bin/mcp-ns"
+        ]
+      },
+      "server_connection": {
+        "problem": "Cannot connect to MCP server", 
+        "solutions": [
+          "Check server status: mcp-ns server status",
+          "Restart server: mcp-ns server stop && mcp-ns server start",
+          "Check logs: mcp-ns server logs"
+        ]
+      },
+      "client_config": {
+        "problem": "Client configuration issues",
+        "solutions": [
+          "List clients: Use netsuite_list MCP tool",
+          "Test specific client: Use netsuite_test MCP tool",
+          "Reconfigure: Use netsuite_setup MCP tool"
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,235 @@
+{
+  "name": "RockWest Composites Query Library",
+  "description": "Common NetSuite queries for RockWest Composites operations",
+  "client": "rockwest",
+  "version": "1.0.0",
+  "last_updated": "2025-01-29",
+  "categories": {
+    "customers": {
+      "title": "Customer Queries",
+      "description": "Queries for customer management and analysis",
+      "queries": {
+        "all_active_customers": {
+          "name": "All Active Customers",
+          "description": "List all active customers with basic information",
+          "query": "SELECT id, companyname, email, phone, city, state FROM customer WHERE isinactive = 'F' ORDER BY companyname",
+          "expected_columns": ["id", "companyname", "email", "phone", "city", "state"],
+          "use_cases": ["Customer directory", "Contact list generation", "Basic reporting"]
+        },
+        "recent_customers": {
+          "name": "Recently Added Customers",
+          "description": "Customers added in the last 30 days",
+          "query": "SELECT id, companyname, email, datecreated FROM customer WHERE datecreated >= ADD_MONTHS(SYSDATE, -1) AND isinactive = 'F' ORDER BY datecreated DESC",
+          "expected_columns": ["id", "companyname", "email", "datecreated"],
+          "use_cases": ["New customer tracking", "Onboarding reports", "Growth metrics"]
+        },
+        "customer_search": {
+          "name": "Customer Search by Name",
+          "description": "Search customers by company name (template - replace {search_term})",
+          "query": "SELECT id, companyname, email, phone FROM customer WHERE UPPER(companyname) LIKE UPPER('%{search_term}%') AND isinactive = 'F'",
+          "parameters": ["search_term"],
+          "expected_columns": ["id", "companyname", "email", "phone"],
+          "use_cases": ["Customer lookup", "Support queries", "Quick reference"]
+        },
+        "customers_by_state": {
+          "name": "Customers by State",
+          "description": "Group customers by state/region",
+          "query": "SELECT state, COUNT(*) as customer_count FROM customer WHERE isinactive = 'F' AND state IS NOT NULL GROUP BY state ORDER BY customer_count DESC",
+          "expected_columns": ["state", "customer_count"],
+          "use_cases": ["Regional analysis", "Territory planning", "Geographic reporting"]
+        }
+      }
+    },
+    "inventory": {
+      "title": "Inventory & Items",
+      "description": "Queries for inventory management and item analysis",
+      "queries": {
+        "all_active_items": {
+          "name": "All Active Items",
+          "description": "List all active inventory items with basic details",
+          "query": "SELECT itemid, displayname, itemtype, baseprice, quantityavailable FROM item WHERE isinactive = 'F' ORDER BY itemid",
+          "expected_columns": ["itemid", "displayname", "itemtype", "baseprice", "quantityavailable"],
+          "use_cases": ["Inventory overview", "Price lists", "Stock reporting"]
+        },
+        "inventory_parts": {
+          "name": "Inventory Parts Only",
+          "description": "Show only inventory parts (physical items)",
+          "query": "SELECT itemid, displayname, baseprice, quantityavailable, reorderpoint FROM item WHERE itemtype = 'InvtPart' AND isinactive = 'F' ORDER BY itemid",
+          "expected_columns": ["itemid", "displayname", "baseprice", "quantityavailable", "reorderpoint"],
+          "use_cases": ["Physical inventory", "Reorder planning", "Stock analysis"]
+        },
+        "low_stock_items": {
+          "name": "Low Stock Items",
+          "description": "Items with quantity below reorder point or less than 10",
+          "query": "SELECT itemid, displayname, quantityavailable, reorderpoint FROM item WHERE itemtype = 'InvtPart' AND isinactive = 'F' AND (quantityavailable < reorderpoint OR quantityavailable < 10) ORDER BY quantityavailable ASC",
+          "expected_columns": ["itemid", "displayname", "quantityavailable", "reorderpoint"],
+          "use_cases": ["Reorder alerts", "Inventory planning", "Stock management"]
+        },
+        "item_search": {
+          "name": "Item Search",
+          "description": "Search items by ID or name (template - replace {search_term})",
+          "query": "SELECT itemid, displayname, itemtype, baseprice, quantityavailable FROM item WHERE (UPPER(itemid) LIKE UPPER('%{search_term}%') OR UPPER(displayname) LIKE UPPER('%{search_term}%')) AND isinactive = 'F'",
+          "parameters": ["search_term"],
+          "expected_columns": ["itemid", "displayname", "itemtype", "baseprice", "quantityavailable"],
+          "use_cases": ["Item lookup", "Product search", "Quick reference"]
+        },
+        "high_value_items": {
+          "name": "High Value Items",
+          "description": "Items with base price over $1000",
+          "query": "SELECT itemid, displayname, baseprice, quantityavailable, (baseprice * quantityavailable) as inventory_value FROM item WHERE baseprice > 1000 AND isinactive = 'F' ORDER BY baseprice DESC",
+          "expected_columns": ["itemid", "displayname", "baseprice", "quantityavailable", "inventory_value"],
+          "use_cases": ["High-value tracking", "Insurance reporting", "Asset management"]
+        }
+      }
+    },
+    "sales": {
+      "title": "Sales & Orders",
+      "description": "Queries for sales order and transaction analysis",
+      "queries": {
+        "recent_sales_orders": {
+          "name": "Recent Sales Orders",
+          "description": "Sales orders from the last 30 days",
+          "query": "SELECT tranid, trandate, entity, total, status FROM transaction WHERE type = 'SalesOrd' AND trandate >= ADD_MONTHS(SYSDATE, -1) ORDER BY trandate DESC LIMIT 50",
+          "expected_columns": ["tranid", "trandate", "entity", "total", "status"],
+          "use_cases": ["Recent activity", "Sales tracking", "Order status"]
+        },
+        "pending_orders": {
+          "name": "Pending Sales Orders",
+          "description": "Sales orders that are not yet fulfilled",
+          "query": "SELECT tranid, trandate, entity, total, status FROM transaction WHERE type = 'SalesOrd' AND status IN ('Pending Approval', 'Pending Fulfillment') ORDER BY trandate ASC",
+          "expected_columns": ["tranid", "trandate", "entity", "total", "status"],
+          "use_cases": ["Order fulfillment", "Backlog management", "Customer service"]
+        },
+        "monthly_sales_summary": {
+          "name": "Monthly Sales Summary",
+          "description": "Sales totals by month for the current year",
+          "query": "SELECT DATE_TRUNC('month', trandate) as month, COUNT(*) as order_count, SUM(total) as total_sales FROM transaction WHERE type = 'SalesOrd' AND trandate >= DATE_TRUNC('year', SYSDATE) GROUP BY DATE_TRUNC('month', trandate) ORDER BY month DESC",
+          "expected_columns": ["month", "order_count", "total_sales"],
+          "use_cases": ["Monthly reporting", "Trend analysis", "Performance tracking"]
+        },
+        "top_customers_by_sales": {
+          "name": "Top Customers by Sales",
+          "description": "Customers with highest sales volume (last 12 months)",
+          "query": "SELECT entity, COUNT(*) as order_count, SUM(total) as total_sales FROM transaction WHERE type = 'SalesOrd' AND trandate >= ADD_MONTHS(SYSDATE, -12) GROUP BY entity ORDER BY total_sales DESC LIMIT 20",
+          "expected_columns": ["entity", "order_count", "total_sales"],
+          "use_cases": ["Customer ranking", "Account management", "Sales focus"]
+        },
+        "large_orders": {
+          "name": "Large Orders",
+          "description": "Orders with value over $10,000",
+          "query": "SELECT tranid, trandate, entity, total, status FROM transaction WHERE type = 'SalesOrd' AND total > 10000 ORDER BY total DESC LIMIT 25",
+          "expected_columns": ["tranid", "trandate", "entity", "total", "status"],
+          "use_cases": ["High-value tracking", "Special handling", "VIP customers"]
+        }
+      }
+    },
+    "invoicing": {
+      "title": "Invoices & Revenue",
+      "description": "Queries for invoice and revenue analysis",
+      "queries": {
+        "recent_invoices": {
+          "name": "Recent Invoices",
+          "description": "Invoices from the last 30 days",
+          "query": "SELECT tranid, trandate, entity, total, status FROM transaction WHERE type = 'CustInvc' AND trandate >= ADD_MONTHS(SYSDATE, -1) ORDER BY trandate DESC LIMIT 50",
+          "expected_columns": ["tranid", "trandate", "entity", "total", "status"],
+          "use_cases": ["Recent billing", "Revenue tracking", "Collection follow-up"]
+        },
+        "outstanding_invoices": {
+          "name": "Outstanding Invoices",
+          "description": "Unpaid or partially paid invoices",
+          "query": "SELECT tranid, trandate, entity, total, amountremaining, duedate FROM transaction WHERE type = 'CustInvc' AND amountremaining > 0 ORDER BY duedate ASC",
+          "expected_columns": ["tranid", "trandate", "entity", "total", "amountremaining", "duedate"],
+          "use_cases": ["Collections", "Accounts receivable", "Cash flow management"]
+        },
+        "monthly_revenue": {
+          "name": "Monthly Revenue",
+          "description": "Invoice totals by month for revenue tracking",
+          "query": "SELECT DATE_TRUNC('month', trandate) as month, COUNT(*) as invoice_count, SUM(total) as total_revenue FROM transaction WHERE type = 'CustInvc' AND trandate >= ADD_MONTHS(SYSDATE, -12) GROUP BY DATE_TRUNC('month', trandate) ORDER BY month DESC",
+          "expected_columns": ["month", "invoice_count", "total_revenue"],
+          "use_cases": ["Revenue reporting", "Financial analysis", "Growth tracking"]
+        },
+        "overdue_invoices": {
+          "name": "Overdue Invoices",
+          "description": "Invoices past due date with remaining balance",
+          "query": "SELECT tranid, trandate, entity, total, amountremaining, duedate, (SYSDATE - duedate) as days_overdue FROM transaction WHERE type = 'CustInvc' AND amountremaining > 0 AND duedate < SYSDATE ORDER BY days_overdue DESC",
+          "expected_columns": ["tranid", "trandate", "entity", "total", "amountremaining", "duedate", "days_overdue"],
+          "use_cases": ["Collections priority", "Credit management", "Customer follow-up"]
+        }
+      }
+    },
+    "operations": {
+      "title": "Operations & Analytics",
+      "description": "Queries for operational insights and business analytics",
+      "queries": {
+        "transaction_summary": {
+          "name": "Transaction Summary",
+          "description": "Count of different transaction types",
+          "query": "SELECT type, COUNT(*) as count FROM transaction GROUP BY type ORDER BY count DESC",
+          "expected_columns": ["type", "count"],
+          "use_cases": ["Activity overview", "System usage", "Data validation"]
+        },
+        "daily_activity": {
+          "name": "Daily Activity (Last 7 Days)",
+          "description": "Transaction counts by day for recent activity",
+          "query": "SELECT DATE(trandate) as date, type, COUNT(*) as count FROM transaction WHERE trandate >= SYSDATE - 7 GROUP BY DATE(trandate), type ORDER BY date DESC, type",
+          "expected_columns": ["date", "type", "count"],
+          "use_cases": ["Recent activity", "Daily monitoring", "Workflow tracking"]
+        },
+        "system_performance": {
+          "name": "System Performance Metrics",
+          "description": "Basic system health indicators",
+          "query": "SELECT 'Active Customers' as metric, COUNT(*) as value FROM customer WHERE isinactive = 'F' UNION ALL SELECT 'Active Items', COUNT(*) FROM item WHERE isinactive = 'F' UNION ALL SELECT 'Orders This Month', COUNT(*) FROM transaction WHERE type = 'SalesOrd' AND trandate >= DATE_TRUNC('month', SYSDATE)",
+          "expected_columns": ["metric", "value"],
+          "use_cases": ["System overview", "Health dashboard", "Quick metrics"]
+        }
+      }
+    }
+  },
+  "quick_start_queries": [
+    {
+      "name": "Connection Test",
+      "description": "Simple query to test NetSuite connection",
+      "query": "SELECT ROWNUM FROM dual WHERE ROWNUM = 1",
+      "use_case": "Test connection"
+    },
+    {
+      "name": "Customer Count",
+      "description": "Quick count of active customers",
+      "query": "SELECT COUNT(*) as customer_count FROM customer WHERE isinactive = 'F'",
+      "use_case": "Basic metrics"
+    },
+    {
+      "name": "Item Count",
+      "description": "Quick count of active items",
+      "query": "SELECT COUNT(*) as item_count FROM item WHERE isinactive = 'F'",
+      "use_case": "Inventory overview"
+    },
+    {
+      "name": "Recent Activity",
+      "description": "Last 5 transactions of any type",
+      "query": "SELECT type, tranid, trandate, total FROM transaction ORDER BY trandate DESC LIMIT 5",
+      "use_case": "Recent activity check"
+    }
+  ],
+  "usage_tips": [
+    "Start with quick_start_queries to test your connection",
+    "Use LIMIT clauses to avoid large result sets",
+    "Replace {search_term} with actual search values in template queries",
+    "Monitor query performance - complex queries may take longer",
+    "Use the netsuite_validate tool to check your setup before running queries"
+  ],
+  "common_tables": {
+    "customer": "Customer records and contact information",
+    "item": "Products, services, and inventory items", 
+    "transaction": "All transaction types (orders, invoices, payments)",
+    "vendor": "Supplier and vendor information",
+    "employee": "Employee records and information"
+  },
+  "security_notes": [
+    "Only SELECT queries are permitted for security",
+    "All queries are logged and monitored",
+    "Rate limiting applies - limit concurrent queries",
+    "Sensitive data access is restricted by NetSuite permissions",
+    "Query validation prevents destructive operations"
+  ]
+}

@@ -21,6 +21,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import dotenv from 'dotenv';
+import fs from 'fs/promises';
 
 // Load environment variables
 dotenv.config();
@@ -45,6 +46,10 @@ class SaraleguiMCPServer {
     this.learningEngine = new LearningEngine(this.db);
     this.toolRegistry = new ToolRegistry(this.db);
     this.securityManager = new SecurityManager(this.db);
+    
+    // Initialize framework integration
+    this.frameworkPath = '/home/ben/saralegui-solutions-llc/shared/MCPBestPracticesFramework';
+    this.frameworkEnabled = true;
     
     this.sessionId = this.generateSessionId();
     this.context = {
@@ -198,6 +203,36 @@ class SaraleguiMCPServer {
             uri: 'knowledge://learning-stats',
             name: 'Learning Statistics',
             description: 'Live learning engine metrics and pattern data',
+            mimeType: 'application/json'
+          },
+          {
+            uri: 'framework://compliance',
+            name: 'Framework Compliance',
+            description: 'MCP Best Practices Framework compliance metrics and status',
+            mimeType: 'application/json'
+          },
+          {
+            uri: 'framework://patterns-config',
+            name: 'Framework Patterns',
+            description: 'Framework pattern definitions and enforcement rules',
+            mimeType: 'application/json'
+          },
+          {
+            uri: 'framework://monitoring',
+            name: 'Framework Monitoring',
+            description: 'Real-time framework monitoring dashboard',
+            mimeType: 'application/json'
+          },
+          {
+            uri: 'framework://templates',
+            name: 'Action Templates',
+            description: 'Best practices templates for common actions',
+            mimeType: 'text/markdown'
+          },
+          {
+            uri: 'framework://project-configs',
+            name: 'Project Configurations',
+            description: 'Project-specific framework configurations and status',
             mimeType: 'application/json'
           }
         ]
@@ -383,6 +418,72 @@ Last updated: ${new Date().toISOString()}`;
         };
       }
       
+      // Framework resources
+      if (uri === 'framework://compliance') {
+        const compliance = await this.getFrameworkCompliance();
+        return {
+          contents: [
+            {
+              uri,
+              mimeType: 'application/json',
+              text: JSON.stringify(compliance, null, 2)
+            }
+          ]
+        };
+      }
+      
+      if (uri === 'framework://patterns-config') {
+        const patterns = await this.getFrameworkPatterns();
+        return {
+          contents: [
+            {
+              uri,
+              mimeType: 'application/json',
+              text: JSON.stringify(patterns, null, 2)
+            }
+          ]
+        };
+      }
+      
+      if (uri === 'framework://monitoring') {
+        const monitoring = await this.getFrameworkMonitoring();
+        return {
+          contents: [
+            {
+              uri,
+              mimeType: 'application/json',
+              text: JSON.stringify(monitoring, null, 2)
+            }
+          ]
+        };
+      }
+      
+      if (uri === 'framework://templates') {
+        const templates = await this.getFrameworkTemplates();
+        return {
+          contents: [
+            {
+              uri,
+              mimeType: 'text/markdown',
+              text: templates
+            }
+          ]
+        };
+      }
+      
+      if (uri === 'framework://project-configs') {
+        const configs = await this.getProjectConfigurations();
+        return {
+          contents: [
+            {
+              uri,
+              mimeType: 'application/json',
+              text: JSON.stringify(configs, null, 2)
+            }
+          ]
+        };
+      }
+      
       throw new Error(`Unknown resource: ${uri}`);
     });
   }
@@ -481,6 +582,247 @@ Last updated: ${new Date().toISOString()}`;
 
   generateSessionId() {
     return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }
+
+  // Framework integration methods
+  async getFrameworkCompliance() {
+    if (!this.frameworkEnabled) {
+      return { enabled: false, message: 'Framework disabled' };
+    }
+
+    try {
+      // Read patterns log to calculate compliance
+      const logPath = path.join(this.frameworkPath, 'monitoring/patterns.log');
+      const content = await fs.readFile(logPath, 'utf8');
+      const patterns = content.split('\n')
+        .filter(line => line.trim())
+        .map(line => JSON.parse(line))
+        .filter(p => {
+          const patternTime = new Date(p.timestamp);
+          const cutoff = new Date();
+          cutoff.setDate(cutoff.getDate() - 7); // Last 7 days
+          return patternTime >= cutoff;
+        });
+
+      const totalActions = patterns.length;
+      const successfulActions = patterns.filter(p => p.success).length;
+      const averageCompliance = patterns.reduce((sum, p) => sum + (p.compliance_score || 80), 0) / Math.max(1, patterns.length);
+
+      return {
+        enabled: true,
+        timeframe: '7d',
+        total_actions: totalActions,
+        successful_actions: successfulActions,
+        success_rate: totalActions > 0 ? (successfulActions / totalActions * 100).toFixed(1) : 0,
+        average_compliance_score: averageCompliance.toFixed(1),
+        last_updated: new Date().toISOString(),
+        framework_version: '1.0.0',
+        integration_status: 'active'
+      };
+    } catch (error) {
+      return {
+        enabled: true,
+        error: error.message,
+        status: 'error_reading_logs'
+      };
+    }
+  }
+
+  async getFrameworkPatterns() {
+    if (!this.frameworkEnabled) {
+      return { enabled: false };
+    }
+
+    try {
+      const patternsPath = path.join(this.frameworkPath, 'config/patterns.json');
+      const content = await fs.readFile(patternsPath, 'utf8');
+      const patterns = JSON.parse(content);
+      
+      return {
+        enabled: true,
+        loaded_at: new Date().toISOString(),
+        ...patterns
+      };
+    } catch (error) {
+      return {
+        enabled: true,
+        error: error.message,
+        status: 'error_loading_patterns'
+      };
+    }
+  }
+
+  async getFrameworkMonitoring() {
+    if (!this.frameworkEnabled) {
+      return { enabled: false };
+    }
+
+    try {
+      // Get current monitoring status
+      const metricsPath = path.join(this.frameworkPath, 'monitoring/metrics.json');
+      let metrics = {};
+      
+      try {
+        const content = await fs.readFile(metricsPath, 'utf8');
+        metrics = JSON.parse(content);
+      } catch {
+        // Create empty metrics if file doesn't exist
+        metrics = {
+          timestamp: new Date().toISOString(),
+          status: 'initializing'
+        };
+      }
+
+      return {
+        enabled: true,
+        framework_status: 'active',
+        monitoring_active: true,
+        last_update: metrics.timestamp || new Date().toISOString(),
+        metrics: metrics,
+        dashboard_url: 'framework://monitoring',
+        alerts_active: true
+      };
+    } catch (error) {
+      return {
+        enabled: true,
+        error: error.message,
+        status: 'monitoring_error'
+      };
+    }
+  }
+
+  async getFrameworkTemplates() {
+    if (!this.frameworkEnabled) {
+      return '# Framework Disabled\n\nFramework integration is currently disabled.';
+    }
+
+    try {
+      // Return a summary of available templates
+      const templatesList = [
+        '# MCP Best Practices Framework Templates',
+        '',
+        '## Available Action Templates',
+        '',
+        '### 1. NetSuite Script Development',
+        '- Pre-action documentation with ESONUS naming conventions',
+        '- Governance monitoring and error handling patterns',
+        '- Required structure validation',
+        '',
+        '### 2. API Integration',
+        '- Authentication and rate limiting patterns',
+        '- Error handling and retry logic',
+        '- Security validation requirements',
+        '',
+        '### 3. Database Migration',
+        '- Rollback procedures and data validation',
+        '- Performance monitoring during migration',
+        '- Transaction management patterns',
+        '',
+        '### 4. Deployment Pipeline',
+        '- Health checks and monitoring integration',
+        '- Automated rollback triggers',
+        '- Performance baseline validation',
+        '',
+        '### 5. Incident Response',
+        '- Escalation procedures and communication patterns',
+        '- Root cause analysis frameworks',
+        '- Post-incident learning integration',
+        '',
+        '### 6. Performance Optimization',
+        '- Baseline measurement and comparison',
+        '- Bottleneck identification patterns',
+        '- Optimization validation methods',
+        '',
+        '## Usage',
+        'Templates are automatically applied based on action type and client configuration.',
+        'Framework learning engine tracks successful patterns and suggests optimizations.',
+        '',
+        `*Last updated: ${new Date().toISOString()}*`
+      ].join('\n');
+
+      return templatesList;
+    } catch (error) {
+      return `# Framework Templates Error\n\nError loading templates: ${error.message}`;
+    }
+  }
+
+  async getProjectConfigurations() {
+    if (!this.frameworkEnabled) {
+      return { enabled: false };
+    }
+
+    try {
+      // Analyze project configurations based on discovered projects
+      const projectsBasePath = '/home/ben/saralegui-solutions-llc';
+      const clients = ['esonus', 'products', 'infrastructure'];
+      const configurations = {};
+
+      for (const client of clients) {
+        const clientPath = path.join(projectsBasePath, client);
+        try {
+          await fs.access(clientPath);
+          const projects = await fs.readdir(clientPath, { withFileTypes: true });
+          
+          configurations[client] = {
+            path: clientPath,
+            projects: projects
+              .filter(dirent => dirent.isDirectory())
+              .map(dirent => ({
+                name: dirent.name,
+                path: path.join(clientPath, dirent.name),
+                framework_config_exists: false, // Would check for .mcp-config.json
+                estimated_compliance: this.estimateProjectCompliance(client, dirent.name)
+              }))
+          };
+        } catch {
+          configurations[client] = {
+            path: clientPath,
+            error: 'Client directory not accessible',
+            projects: []
+          };
+        }
+      }
+
+      return {
+        enabled: true,
+        scan_timestamp: new Date().toISOString(),
+        base_path: projectsBasePath,
+        clients: configurations,
+        framework_version: '1.0.0',
+        total_projects: Object.values(configurations)
+          .reduce((sum, client) => sum + client.projects?.length || 0, 0)
+      };
+    } catch (error) {
+      return {
+        enabled: true,
+        error: error.message,
+        status: 'config_scan_error'
+      };
+    }
+  }
+
+  estimateProjectCompliance(client, projectName) {
+    // Simplified compliance estimation based on known patterns
+    let score = 60; // Base score
+    
+    // ESONUS client projects
+    if (client === 'esonus') {
+      if (projectName.startsWith('eso_') || projectName === 'escalon') {
+        score += 10; // Naming convention bonus
+      }
+      if (projectName === 'escalon') {
+        score -= 20; // Known structural issues
+      }
+    }
+    
+    // Products/infrastructure
+    if (client === 'products' || client === 'infrastructure') {
+      if (projectName.includes('mcp') || projectName.includes('ai')) {
+        score += 15; // Infrastructure bonus
+      }
+    }
+    
+    return Math.min(100, Math.max(0, score));
   }
 
   async start() {

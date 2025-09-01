@@ -1,0 +1,321 @@
+{
+  "name": "NetSuite MCP Usage Examples",
+  "version": "1.0.0",
+  "description": "Practical examples and workflows for NetSuite MCP operations",
+  "last_updated": "2025-01-29",
+  "workflow_examples": {
+    "initial_setup": {
+      "title": "Initial Client Setup Workflow",
+      "description": "Complete workflow to set up NetSuite MCP for a new client",
+      "steps": [
+        {
+          "step": 1,
+          "title": "Start MCP Server",
+          "method": "Command Line",
+          "command": "mcp-ns server start",
+          "description": "Initialize the MCP server before any operations"
+        },
+        {
+          "step": 2,
+          "title": "Verify Server Health",
+          "method": "Command Line or MCP Tool",
+          "command": "mcp-ns health",
+          "description": "Ensure server is operational and all systems are healthy"
+        },
+        {
+          "step": 3,
+          "title": "Configure NetSuite Credentials",
+          "method": "MCP Tool",
+          "tool": "netsuite_setup",
+          "example_parameters": {
+            "client_name": "rockwest",
+            "account_id": "TSTDRV123456_SB1",
+            "consumer_key": "abcd1234567890abcd1234567890abcd1234567890abcd1234567890abcd1234",
+            "consumer_secret": "efgh1234567890efgh1234567890efgh1234567890efgh1234567890efgh1234",
+            "token_id": "ijkl1234567890ijkl1234567890ijkl1234567890ijkl1234567890ijkl1234",
+            "token_secret": "mnop1234567890mnop1234567890mnop1234567890mnop1234567890mnop1234",
+            "environment": "sandbox"
+          },
+          "description": "Use your actual NetSuite OAuth credentials"
+        },
+        {
+          "step": 4,
+          "title": "Test Connection",
+          "method": "MCP Tool",
+          "tool": "netsuite_test",
+          "example_parameters": {
+            "client_name": "rockwest"
+          },
+          "description": "Verify the NetSuite connection works"
+        },
+        {
+          "step": 5,
+          "title": "Run Test Query",
+          "method": "MCP Tool", 
+          "tool": "netsuite_query",
+          "example_parameters": {
+            "client_name": "rockwest",
+            "query": "SELECT id, companyname FROM customer LIMIT 5",
+            "limit": 5
+          },
+          "description": "Execute a simple query to confirm everything works"
+        }
+      ],
+      "expected_outcome": "Client fully configured and tested, ready for production use"
+    },
+    "daily_operations": {
+      "title": "Daily Operations Examples",
+      "description": "Common NetSuite operations using MCP tools",
+      "examples": [
+        {
+          "operation": "Customer Lookup",
+          "description": "Find customers by name or criteria",
+          "tool": "netsuite_query",
+          "query_examples": [
+            {
+              "description": "Search customers by company name",
+              "query": "SELECT id, companyname, email FROM customer WHERE companyname LIKE '%ABC Corp%'"
+            },
+            {
+              "description": "List recent customers",
+              "query": "SELECT id, companyname, datecreated FROM customer WHERE datecreated >= '2024-01-01' ORDER BY datecreated DESC LIMIT 20"
+            }
+          ]
+        },
+        {
+          "operation": "Item Management", 
+          "description": "Query and manage inventory items",
+          "tool": "netsuite_query",
+          "query_examples": [
+            {
+              "description": "List active items with pricing",
+              "query": "SELECT itemid, displayname, baseprice, quantityavailable FROM item WHERE isinactive = 'F' LIMIT 50"
+            },
+            {
+              "description": "Find low stock items",
+              "query": "SELECT itemid, displayname, quantityavailable FROM item WHERE quantityavailable < 10 AND isinactive = 'F'"
+            }
+          ]
+        },
+        {
+          "operation": "Transaction Reporting",
+          "description": "Query sales orders and transactions",
+          "tool": "netsuite_query", 
+          "query_examples": [
+            {
+              "description": "Recent sales orders",
+              "query": "SELECT tranid, trandate, entity, total FROM transaction WHERE type = 'SalesOrd' AND trandate >= '2024-01-01' ORDER BY trandate DESC LIMIT 25"
+            },
+            {
+              "description": "Monthly sales summary",
+              "query": "SELECT DATE_TRUNC('month', trandate) as month, COUNT(*) as orders, SUM(total) as revenue FROM transaction WHERE type = 'SalesOrd' GROUP BY DATE_TRUNC('month', trandate) ORDER BY month DESC"
+            }
+          ]
+        }
+      ]
+    },
+    "development_workflows": {
+      "title": "Development and Deployment Workflows",
+      "description": "Examples for SuiteScript development and deployment",
+      "examples": [
+        {
+          "workflow": "Deploy User Event Script",
+          "description": "Deploy a user event script to NetSuite",
+          "tool": "netsuite_deploy",
+          "example": {
+            "script_type": "userevent",
+            "script_name": "Customer Validation Script",
+            "script_content": "/**\n * @NApiVersion 2.1\n * @NScriptType UserEventScript\n */\ndefine(['N/log'], function(log) {\n    function beforeSubmit(context) {\n        log.info('Customer Validation', 'Validating customer record');\n        // Add validation logic here\n    }\n    return {\n        beforeSubmit: beforeSubmit\n    };\n});",
+            "deployment_config": {
+              "recordType": "customer",
+              "eventType": "create,edit"
+            }
+          }
+        },
+        {
+          "workflow": "Deploy Scheduled Script",
+          "description": "Deploy a scheduled script for batch processing",
+          "tool": "netsuite_deploy",
+          "example": {
+            "script_type": "scheduled", 
+            "script_name": "Daily Inventory Report",
+            "script_content": "/**\n * @NApiVersion 2.1\n * @NScriptType ScheduledScript\n */\ndefine(['N/search', 'N/email'], function(search, email) {\n    function execute(context) {\n        // Generate and send daily inventory report\n    }\n    return {\n        execute: execute\n    };\n});",
+            "deployment_config": {
+              "schedule": "daily"
+            }
+          }
+        }
+      ]
+    },
+    "troubleshooting_examples": {
+      "title": "Troubleshooting and Debugging",
+      "description": "Common troubleshooting scenarios and solutions",
+      "scenarios": [
+        {
+          "problem": "Authentication Errors",
+          "symptoms": "Unable to connect to NetSuite, authentication failed",
+          "diagnosis_steps": [
+            {
+              "step": "Check server status",
+              "command": "mcp-ns server status"
+            },
+            {
+              "step": "List configured clients",
+              "method": "Use netsuite_list MCP tool"
+            },
+            {
+              "step": "Test specific client",
+              "method": "Use netsuite_test MCP tool with client_name"
+            }
+          ],
+          "common_solutions": [
+            "Verify OAuth credentials are correct",
+            "Check NetSuite account permissions",
+            "Ensure integration is enabled in NetSuite",
+            "Verify token hasn't expired"
+          ]
+        },
+        {
+          "problem": "Query Failures",
+          "symptoms": "SuiteQL queries returning errors",
+          "diagnosis_steps": [
+            {
+              "step": "Test simple query",
+              "example": "SELECT id FROM customer LIMIT 1"
+            },
+            {
+              "step": "Check query syntax",
+              "reference": "NetSuite SuiteQL documentation"
+            },
+            {
+              "step": "Verify table/field names",
+              "suggestion": "Use NetSuite Records Browser"
+            }
+          ],
+          "common_solutions": [
+            "Use correct table and field names",
+            "Add proper WHERE clauses",
+            "Check user permissions for accessed records",
+            "Use appropriate LIMIT clauses"
+          ]
+        }
+      ]
+    }
+  },
+  "integration_examples": {
+    "title": "Integration with Other Tools",
+    "description": "Examples of integrating NetSuite MCP with other systems",
+    "examples": [
+      {
+        "integration": "Claude Assistant Integration",
+        "description": "Using NetSuite MCP through Claude Assistant tools",
+        "methods": [
+          {
+            "method": "Through Claudio",
+            "example": "./claudio mcp-ns health",
+            "use_case": "Server management through orchestrator"
+          },
+          {
+            "method": "Through CA CLI", 
+            "example": "ca mcp-ns client list",
+            "use_case": "Unified command interface"
+          },
+          {
+            "method": "Direct MCP Tools",
+            "example": "Use netsuite_query tool in Claude Desktop",
+            "use_case": "Direct NetSuite operations in conversation"
+          }
+        ]
+      },
+      {
+        "integration": "Shell Automation",
+        "description": "Using NetSuite MCP in shell scripts and automation",
+        "examples": [
+          {
+            "script_type": "Health Check Script",
+            "content": "#!/bin/bash\n# Daily health check\nns-health\nif [ $? -eq 0 ]; then\n    echo \"NetSuite MCP healthy\"\nelse\n    echo \"NetSuite MCP issues detected\" | mail -s \"MCP Alert\" admin@company.com\nfi"
+          },
+          {
+            "script_type": "Client Testing Loop",
+            "content": "#!/bin/bash\n# Test all clients\nfor client in rockwest vanzandt interstate; do\n    echo \"Testing $client...\"\n    ns-$client\ndone"
+          }
+        ]
+      }
+    ]
+  },
+  "performance_examples": {
+    "title": "Performance and Best Practices",
+    "description": "Examples of efficient NetSuite MCP usage",
+    "best_practices": [
+      {
+        "category": "Query Optimization",
+        "practices": [
+          {
+            "practice": "Use LIMIT clauses",
+            "example": "SELECT * FROM customer LIMIT 100",
+            "reason": "Prevents large result sets that can timeout"
+          },
+          {
+            "practice": "Filter with WHERE clauses",
+            "example": "SELECT * FROM customer WHERE datecreated >= '2024-01-01'",
+            "reason": "Reduces data transfer and processing time"
+          },
+          {
+            "practice": "Select specific fields",
+            "example": "SELECT id, companyname FROM customer",
+            "reason": "Faster queries and reduced bandwidth"
+          }
+        ]
+      },
+      {
+        "category": "Rate Limiting",
+        "practices": [
+          {
+            "practice": "Batch operations",
+            "description": "Group multiple queries into single sessions",
+            "limit": "10 calls per minute per session"
+          },
+          {
+            "practice": "Cache results",
+            "description": "Store frequently accessed data locally",
+            "suggestion": "Use session storage for repeated queries"
+          }
+        ]
+      },
+      {
+        "category": "Error Handling",
+        "practices": [
+          {
+            "practice": "Validate credentials before queries",
+            "method": "Use netsuite_test tool first"
+          },
+          {
+            "practice": "Handle timeout gracefully", 
+            "suggestion": "Use smaller LIMIT values for large datasets"
+          }
+        ]
+      }
+    ]
+  },
+  "client_specific_examples": {
+    "title": "Client-Specific Examples",
+    "description": "Examples tailored to specific client configurations",
+    "clients": {
+      "rockwest": {
+        "description": "RockWest Composites client configuration",
+        "quick_access": "ns-rockwest",
+        "common_queries": [
+          "SELECT id, companyname FROM customer WHERE companyname LIKE '%Rock%'",
+          "SELECT itemid, displayname FROM item WHERE itemtype = 'InvtPart'"
+        ]
+      },
+      "vanzandt": {
+        "description": "VanZandt client configuration",  
+        "quick_access": "ns-vanzandt",
+        "common_queries": [
+          "SELECT tranid, total FROM transaction WHERE type = 'SalesOrd' ORDER BY trandate DESC LIMIT 10"
+        ]
+      }
+    }
+  }
+}
